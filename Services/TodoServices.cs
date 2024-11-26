@@ -1,66 +1,55 @@
 /////////// USING DATABASE /////////////
 
 using System.Collections.Generic;
-using System.Threading.Tasks;            //
-using Microsoft.EntityFrameworkCore;    // Provides async database operations
+using System.Threading.Tasks;           
+using Microsoft.EntityFrameworkCore;   // Provides async database operations
 using TodoApi.Data;                    // Allows use of TodoContext
-using TodoApi.Models;                 // Allows use of TodoItem
+using TodoApi.Models;
+using TodoApi.RepositoryPattern;                  // Allows use of TodoItem
 
 namespace TodoApi.Services
 {
     // The TodoService class provides methods to interact with the to-do items in the database.
     public class TodoService
     {
-        private readonly TodoContext _context;       // Reference to the database context
+        // Reference to the repository pattern that contains the database context
+        // I'm not bringing the actual class, I'm bringing an interface to reduce dependencies
+        private readonly ITodoItemRepository _repository;
 
         // Constructor that receives the TodoContext via dependency injection
-        public TodoService(TodoContext context)
+        public TodoService(ITodoItemRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // Retrieves all to-do items asynchronously.
-        public async Task<List<TodoItem>> GetAllAsync()
+        public Task<List<TodoItem>> GetAllAsync()
         {
-            return await _context.TodoItems.ToListAsync();
+            return _repository.GetAllAsync();
         }
 
         // Retrieves a specific to-do item by its ID asynchronously.
-        public async Task<TodoItem?> GetByIdAsync(int id)
+        public Task<TodoItem?> GetByIdAsync(int id)
         {
-            return await _context.TodoItems.FindAsync(id);
+            return _repository.GetByIdAsync(id);
         }
 
         // Adds a new to-do item to the database asynchronously.
-        public async Task<TodoItem> AddAsync(TodoItem newItem)
+        public Task<TodoItem> AddAsync(TodoItem newItem)
         {
-            _context.TodoItems.Add(newItem);          // Adds the new item to the context
-            await _context.SaveChangesAsync();        // Saves changes to the database
-            return newItem;                           // Returns the added item
+            return _repository.AddAsync(newItem);
         }
 
         // Updates an existing to-do item in the database asynchronously.
-        public async Task<bool> UpdateAsync(TodoItem updatedItem)
+        public Task<bool> UpdateAsync(TodoItem updatedItem)
         {
-            // Checks if the item exists in the database
-            if (!await _context.TodoItems.AnyAsync(t => t.Id == updatedItem.Id))
-                return false;                         // Returns false if not found
-
-            _context.Entry(updatedItem).State = EntityState.Modified; // Marks the item as modified
-            await _context.SaveChangesAsync();        // Saves changes to the database
-            return true;                              // Returns true to indicate success
+            return _repository.UpdateAsync(updatedItem);
         }
 
         // Deletes a to-do item from the database asynchronously.
-        public async Task<bool> DeleteAsync(int id)
+        public Task<bool> DeleteAsync(int id)
         {
-            var item = await _context.TodoItems.FindAsync(id); // Finds the item by ID
-            if (item == null)
-                return false;                         // Returns false if not found
-
-            _context.TodoItems.Remove(item);          // Removes the item from the context
-            await _context.SaveChangesAsync();        // Saves changes to the database
-            return true;                              // Returns true to indicate success
+            return _repository.DeleteAsync(id);                          // Returns true to indicate success
         }
     }
 }

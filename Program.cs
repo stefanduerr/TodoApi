@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;      // Provides database functionalities
 using TodoApi.Data;                      // Allows use of TodoContext
+using TodoApi.RepositoryPattern;
 using TodoApi.Services;                 // Allows use of TodoService
 
 var builder = WebApplication.CreateBuilder(args); // Creates the builder for the app
@@ -16,6 +17,11 @@ builder.Services.AddDbContext<TodoContext>(options =>
 // Registers the TodoService for dependency injection
 builder.Services.AddScoped<TodoService>();
 
+// TodoItemRepo Dependency Injection
+builder.Services.AddScoped<ITodoItemRepository, TodoItemRepository>();
+//builder.Services.AddScoped<ITodoItemRepository, NewWayToAccessDb>();
+
+
 // Registers Swagger services for API documentation
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -26,6 +32,7 @@ var app = builder.Build();                        // Builds the app
 
 if (app.Environment.IsDevelopment())
 {
+    Console.WriteLine("Running on development server.");
     app.UseSwagger();                             // Enables Swagger in development
     app.UseSwaggerUI();
 }
